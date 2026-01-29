@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Time Tape Control</title>
+	<style>
+		/* 기존 스타일 유지 */
+		body {
+			font-family: 'Apple SD Gothic Neo', sans-serif;
+			background: #121212;
+			color: #eee;
+			margin: 0;
+			padding: 10px;
+			-webkit-user-select: none;
+		}
+
+		.container {
+			max-width: 500px;
+			margin: 0 auto;
+			background: #1e1e1e;
+			border-radius: 16px;
+			overflow: hidden;
+			box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+		}
+
+		.tabs {
+			display: flex;
+			background: #252525;
+			border-bottom: 1px solid #333;
+		}
+
+		.tab {
+			flex: 1;
+			padding: 18px;
+			text-align: center;
+			cursor: pointer;
+			color: #888;
+			font-weight: bold;
+			font-size: 15px;
+			transition: 0.2s;
+		}
+
+		.tab.active {
+			color: #00e676;
+			border-bottom: 3px solid #00e676;
+			background: #2a2a2a;
+		}
+
+		.content {
+			padding: 20px;
+			display: none;
+		}
+
+		.content.active {
+			display: block;
+		}
+
+		.section {
+			background: #2a2a2a;
+			padding: 16px;
+			border-radius: 12px;
+			margin-bottom: 16px;
+			border: 1px solid #333;
+		}
+
+		.sec-title {
+			font-size: 13px;
+			color: #aaa;
+			font-weight: bold;
+			margin-bottom: 12px;
+			border-bottom: 1px solid #444;
+			padding-bottom: 6px;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+
+		label {
+			display: block;
+			font-size: 14px;
+			margin: 10px 0 6px;
+			color: #ccc;
+		}
+
+		select,
+		input {
+			width: 100%;
+			padding: 12px;
+			background: #333;
+			color: white;
+			border: 1px solid #444;
+			border-radius: 8px;
+			box-sizing: border-box;
+			margin-bottom: 5px;
+			font-size: 14px;
+		}
+
+		button {
+			width: 100%;
+			padding: 14px;
+			border: none;
+			border-radius: 8px;
+			font-size: 15px;
+			font-weight: bold;
+			cursor: pointer;
+			margin-top: 5px;
+			transition: 0.2s;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.btn-green {
+			background: #00c853;
+			color: white;
+			margin-top: 15px;
+			border-radius: 0 0 16px 16px;
+			width: 100%;
+			padding: 18px;
+		}
+
+		.btn-green:disabled {
+			background: #1b5e20;
+			color: #888;
+			cursor: not-allowed;
+		}
+
+		.btn-red {
+			background: #d32f2f;
+			color: white;
+			width: auto;
+			padding: 8px 16px;
+			font-size: 13px;
+			margin-top: 0;
+		}
+
+		.btn-small {
+			margin-top: 5px;
+		}
+
+		.loader {
+			border: 3px solid rgba(255, 255, 255, 0.3);
+			border-radius: 50%;
+			border-top: 3px solid #ffffff;
+			width: 18px;
+			height: 18px;
+			animation: spin 1s linear infinite;
+			margin-right: 10px;
+			display: none;
+		}
+
+		@keyframes spin {
+			0% {
+				transform: rotate(0deg);
+			}
+
+			100% {
+				transform: rotate(360deg);
+			}
+		}
+
+		.preset-tabs {
+			display: flex;
+			gap: 8px;
+			overflow-x: auto;
+			padding-bottom: 10px;
+			margin-bottom: 10px;
+		}
+
+		.preset-pill {
+			background: #333;
+			color: #aaa;
+			padding: 8px 16px;
+			border-radius: 20px;
+			font-size: 13px;
+			white-space: nowrap;
+			cursor: pointer;
+			border: 1px solid #444;
+			transition: 0.2s;
+		}
+
+		.preset-pill.active {
+			background: #00c853;
+			color: white;
+			border-color: #00c853;
+			font-weight: bold;
+		}
+
+		.preset-pill.add-btn {
+			background: transparent;
+			border: 1px dashed #666;
+			color: #666;
+		}
+
+		/* 색상 관련 UI 수정 */
+		.color-row {
+			display: flex;
+			gap: 10px;
+			align-items: center;
+			margin-bottom: 10px;
+			background: #222;
+			padding: 10px;
+			border-radius: 8px;
+		}
+
+		.color-box {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 5px;
+			flex: 1;
+		}
+
+		.color-box span {
+			font-size: 11px;
+			color: #888;
+			text-align: center;
+		}
+
+		input[type="color"] {
+			-webkit-appearance: none;
+			border: none;
+			width: 100%;
+			height: 40px;
+			padding: 0;
+			background: none;
+			cursor: pointer;
+			border-radius: 6px;
+		}
+
+		.list-item {
+			background: #333;
+			padding: 12px;
+			border-radius: 8px;
+			margin-bottom: 8px;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			cursor: pointer;
+			transition: 0.2s;
+		}
+
+		.switch-wrap {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 15px;
+			background: #333;
+			padding: 10px 15px;
+			border-radius: 8px;
+		}
+
+		.switch {
+			position: relative;
+			display: inline-block;
+			width: 46px;
+			height: 24px;
+		}
+
+		.switch input {
+			opacity: 0;
+			width: 0;
+			height: 0;
+		}
+
+		.slider {
+			position: absolute;
+			cursor: pointer;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background-color: #555;
+			transition: .4s;
+			border-radius: 34px;
+		}
+
+		.slider:before {
+			position: absolute;
+			content: "";
+			height: 18px;
+			width: 18px;
+			left: 3px;
+			bottom: 3px;
+			background-color: white;
+			transition: .4s;
+			border-radius: 50%;
+		}
+
+		input:checked+.slider {
+			background-color: #00c853;
+		}
+
+		input:checked+.slider:before {
+			transform: translateX(22px);
+		}
+
+		input[type=range] {
+			width: 100%;
+			margin: 10px 0;
+			background: transparent;
+		}
+
+		.range-val {
+			float: right;
+			color: #00e676;
+			font-weight: bold;
+			font-size: 14px;
+		}
+	</style>
+</head>
+
+<body>
+
+	<div class="container">
+		<div class="tabs">
+			<div class="tab active" onclick="setTab(0)">화면 설정</div>
+			<div class="tab" onclick="setTab(1)">디데이 관리</div>
+			<div class="tab" onclick="setTab(2)">밝기/야간</div>
+		</div>
+
+		<div class="content active" id="tab0">
+			<div class="preset-tabs" id="presetTabs"></div>
+
+			<div id="presetEditor">
+				<div class="section">
+					<div class="sec-title">프리셋 이름 <button class="btn-red" onclick="delPreset()">삭제</button></div>
+					<input type="text" id="pName" onchange="updatePresetData()" placeholder="예: 공부 모드">
+				</div>
+
+				<div class="section">
+					<div class="sec-title">안쪽 링 (Inner Ring)</div>
+					<label>표시 정보</label>
+					<select id="im" onchange="updatePresetData()">
+						<option value="0">올해 진행률</option>
+						<option value="5">이번 분기 진행률</option>
+						<option value="1">이번 달 진행률</option>
+						<option value="2">이번 주 진행률</option>
+						<option value="3">오늘 진행률</option>
+						<option value="4">커스텀 디데이</option>
+					</select>
+					<div id="im_dd_box" style="display:none; margin-bottom:10px;">
+						<select id="id" onchange="updatePresetData()"></select>
+					</div>
+
+					<label>색상 모드</label>
+					<select id="icm" onchange="updatePresetData()">
+						<option value="0">단색 (Solid)</option>
+						<option value="1">무지개 (Rainbow)</option>
+						<option value="2">진행 그라데이션 (Time Gradient)</option>
+						<option value="3">고정 그라데이션 (Space Gradient)</option>
+					</select>
+
+					<div class="color-row">
+						<div class="color-box" id="icf_box"><input type="color" id="icf"
+								onchange="updatePresetData()"><span id="icf_label">채움 색</span></div>
+						<div class="color-box" id="icf2_box" style="display:none;"><input type="color" id="icf2"
+								onchange="updatePresetData()"><span>끝 색상</span></div>
+						<div class="color-box"><input type="color" id="ice" onchange="updatePresetData()"><span>빈
+								곳</span></div>
+					</div>
+				</div>
+
+				<div class="section">
+					<div class="sec-title">바깥쪽 링 (Outer Ring)</div>
+					<label>표시 정보</label>
+					<select id="om" onchange="updatePresetData()">
+						<option value="0">올해 진행률</option>
+						<option value="5">이번 분기 진행률</option>
+						<option value="1">이번 달 진행률</option>
+						<option value="2">이번 주 진행률</option>
+						<option value="3">오늘 진행률</option>
+						<option value="4">커스텀 디데이</option>
+					</select>
+					<div id="om_dd_box" style="display:none; margin-bottom:10px;">
+						<select id="od" onchange="updatePresetData()"></select>
+					</div>
+
+					<label>색상 모드</label>
+					<select id="ocm" onchange="updatePresetData()">
+						<option value="0">단색 (Solid)</option>
+						<option value="1">무지개 (Rainbow)</option>
+						<option value="2">진행 그라데이션 (Time Gradient)</option>
+						<option value="3">고정 그라데이션 (Space Gradient)</option>
+					</select>
+
+					<div class="color-row">
+						<div class="color-box" id="ocf_box"><input type="color" id="ocf"
+								onchange="updatePresetData()"><span id="ocf_label">채움 색</span></div>
+						<div class="color-box" id="ocf2_box" style="display:none;"><input type="color" id="ocf2"
+								onchange="updatePresetData()"><span>끝 색상</span></div>
+						<div class="color-box"><input type="color" id="oce" onchange="updatePresetData()"><span>빈
+								곳</span></div>
+					</div>
+				</div>
+
+				<div class="section">
+					<div class="sec-title">7-세그먼트 표시</div>
+					<select id="sm" onchange="updatePresetData()">
+						<option value="1">올해 남은 날</option>
+						<option value="6">이번 분기 남은 날</option>
+						<option value="2">이번 달 남은 날</option>
+						<option value="3">이번 주 남은 날</option>
+						<option value="4">오늘 남은 시간</option>
+						<option value="5">커스텀 디데이</option>
+					</select>
+					<div id="sm_dd_box" style="display:none; margin-top:5px;">
+						<select id="sd" onchange="updatePresetData()"></select>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="content" id="tab1">
+			<div class="section">
+				<div class="sec-title">저장된 디데이 목록</div>
+				<div id="ddayListContainer"></div>
+				<button class="btn-small" onclick="addDDay()" style="width:100%; margin-top:10px; background:#444;">+ 새
+					디데이 추가</button>
+			</div>
+			<div class="section" id="ddayEditor" style="display:none; border-color:#00e676;">
+				<div class="sec-title">디데이 수정</div>
+				<label>이름</label><input type="text" id="dName">
+				<label>시작일</label><input type="date" id="dStart">
+				<label>목표일</label><input type="date" id="dTarget">
+				<div class="row" style="margin-top:15px; display:flex; gap:10px;">
+					<button class="btn-small" onclick="saveDDay()" style="background:#00c853; color:white;">저장</button>
+					<button class="btn-small btn-red" onclick="delDDay()">삭제</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="content" id="tab2">
+			<div class="section">
+				<div class="sec-title">기본 밝기 <span id="briVal" class="range-val">50</span></div>
+				<input type="range" id="bri" min="5" max="255" step="5"
+					oninput="document.getElementById('briVal').innerText=this.value">
+			</div>
+			<div class="section">
+				<div class="switch-wrap">
+					<span style="font-weight:bold; font-size:14px; color:#ddd;">야간 모드 (자동 밝기)</span>
+					<label class="switch">
+						<input type="checkbox" id="nEn" onchange="toggleNightBox()">
+						<span class="slider"></span>
+					</label>
+				</div>
+				<div id="nightBox" style="display:none;">
+					<div class="row" style="display:flex; gap:10px;">
+						<div style="flex:1;"><label>시작 시간</label><input type="number" id="nS" min="0" max="23"></div>
+						<div style="flex:1;"><label>종료 시간</label><input type="number" id="nE" min="0" max="23"></div>
+					</div>
+					<label style="margin-top:15px;">야간 밝기 <span id="nBVal" class="range-val">10</span></label>
+					<input type="range" id="nB" min="1" max="100" step="5"
+						oninput="document.getElementById('nBVal').innerText=this.value">
+				</div>
+			</div>
+		</div>
+
+		<button id="saveBtn" class="btn-green" onclick="uploadConfig()">
+			<span class="loader" id="saveLoader"></span>
+			<span id="saveText">설정 저장하기</span>
+		</button>
+	</div>
+
+	<script>
+		let config = { curIdx: 0, presets: [], ddays: [], bri: 50, nEn: false, nS: 22, nE: 7, nB: 10 };
+		let curDDayIdx = -1;
+
+		window.onload = async () => {
+			try {
+				let res = await fetch('/get-config');
+				let data = await res.json();
+				if (data.presets) config = data; else initDefault();
+			} catch (e) { initDefault(); }
+			renderUI();
+		};
+
+		function initDefault() {
+			config.presets = [{
+				n: "기본 모드",
+				im: 0, id: 0, icm: 0, icf: 0xFF0000, icf2: 0x00FF00, ice: 0,
+				om: 0, od: 0, ocm: 0, ocf: 0x0000FF, ocf2: 0xFFFF00, oce: 0,
+				sm: 1, sd: 0
+			}];
+			config.ddays = [{ n: "새해", s: "2025-01-01", t: "2026-01-01" }];
+		}
+
+		function setTab(idx) {
+			document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+			document.querySelectorAll('.content').forEach((c, i) => c.classList.toggle('active', i === idx));
+		}
+
+		function renderUI() {
+			const pTabs = document.getElementById('presetTabs');
+			pTabs.innerHTML = '';
+			config.presets.forEach((p, i) => {
+				let pill = document.createElement('div');
+				pill.className = `preset-pill ${i === config.curIdx ? 'active' : ''}`;
+				pill.innerText = p.n;
+				pill.onclick = () => { config.curIdx = i; renderUI(); };
+				pTabs.appendChild(pill);
+			});
+			let addBtn = document.createElement('div');
+			addBtn.className = 'preset-pill add-btn';
+			addBtn.innerText = '+ 추가';
+			addBtn.onclick = addPreset;
+			pTabs.appendChild(addBtn);
+
+			loadPresetUI();
+
+			const dList = document.getElementById('ddayListContainer');
+			dList.innerHTML = '';
+			config.ddays.forEach((d, i) => {
+				let div = document.createElement('div');
+				div.className = 'list-item';
+				div.innerHTML = `<span>${d.n}</span> <small>${d.t}</small>`;
+				div.onclick = () => openDDayEdit(i);
+				dList.appendChild(div);
+			});
+
+			document.getElementById('bri').value = config.bri;
+			document.getElementById('briVal').innerText = config.bri;
+			document.getElementById('nEn').checked = config.nEn;
+			document.getElementById('nS').value = config.nS;
+			document.getElementById('nE').value = config.nE;
+			document.getElementById('nB').value = config.nB;
+			document.getElementById('nBVal').innerText = config.nB;
+			toggleNightBox();
+		}
+
+		function toggleNightBox() {
+			document.getElementById('nightBox').style.display = document.getElementById('nEn').checked ? 'block' : 'none';
+		}
+
+		// [중요] UI 로드 시 새로운 색상 필드 처리
+		function loadPresetUI() {
+			if (config.presets.length === 0) return;
+			const p = config.presets[config.curIdx];
+			document.getElementById('pName').value = p.n;
+
+			// Inner
+			document.getElementById('im').value = p.im;
+			document.getElementById('icm').value = p.icm || 0; // default 0
+			document.getElementById('icf').value = intToHex(p.icf);
+			document.getElementById('icf2').value = intToHex(p.icf2 || 0x00FF00);
+			document.getElementById('ice').value = intToHex(p.ice);
+			fillDDaySelect('id', p.id);
+
+			// Outer
+			document.getElementById('om').value = p.om;
+			document.getElementById('ocm').value = p.ocm || 0;
+			document.getElementById('ocf').value = intToHex(p.ocf);
+			document.getElementById('ocf2').value = intToHex(p.ocf2 || 0xFFFF00);
+			document.getElementById('oce').value = intToHex(p.oce);
+			fillDDaySelect('od', p.od);
+
+			// Seg
+			let smVal = p.sm; if (smVal === 0) smVal = 1;
+			document.getElementById('sm').value = smVal;
+			fillDDaySelect('sd', p.sd);
+
+			updateDynamicUI();
+		}
+
+		function updateDynamicUI() {
+			// D-Day Select Box 표시 여부
+			document.getElementById('im_dd_box').style.display = (document.getElementById('im').value == '4') ? 'block' : 'none';
+			document.getElementById('om_dd_box').style.display = (document.getElementById('om').value == '4') ? 'block' : 'none';
+			document.getElementById('sm_dd_box').style.display = (document.getElementById('sm').value == '5') ? 'block' : 'none';
+
+			// Color Mode에 따른 UI 변경 (Inner)
+			let im = document.getElementById('icm').value;
+			// 0:Solid, 1:Rainbow, 2:TimeGrad, 3:SpaceGrad
+			if (im == 1) { // Rainbow
+				document.getElementById('icf_box').style.display = 'none';
+				document.getElementById('icf2_box').style.display = 'none';
+			} else if (im == 0) { // Solid
+				document.getElementById('icf_box').style.display = 'flex';
+				document.getElementById('icf_label').innerText = '채움 색';
+				document.getElementById('icf2_box').style.display = 'none';
+			} else { // Gradients
+				document.getElementById('icf_box').style.display = 'flex';
+				document.getElementById('icf_label').innerText = '시작 색';
+				document.getElementById('icf2_box').style.display = 'flex';
+			}
+
+			// Color Mode에 따른 UI 변경 (Outer)
+			let om = document.getElementById('ocm').value;
+			if (om == 1) { // Rainbow
+				document.getElementById('ocf_box').style.display = 'none';
+				document.getElementById('ocf2_box').style.display = 'none';
+			} else if (om == 0) { // Solid
+				document.getElementById('ocf_box').style.display = 'flex';
+				document.getElementById('ocf_label').innerText = '채움 색';
+				document.getElementById('ocf2_box').style.display = 'none';
+			} else { // Gradients
+				document.getElementById('ocf_box').style.display = 'flex';
+				document.getElementById('ocf_label').innerText = '시작 색';
+				document.getElementById('ocf2_box').style.display = 'flex';
+			}
+		}
+
+		function updatePresetData() {
+			const idx = config.curIdx;
+			const p = config.presets[idx];
+			p.n = document.getElementById('pName').value;
+
+			p.im = parseInt(document.getElementById('im').value);
+			p.id = parseInt(document.getElementById('id').value);
+			p.icm = parseInt(document.getElementById('icm').value);
+			p.icf = hexToInt(document.getElementById('icf').value);
+			p.icf2 = hexToInt(document.getElementById('icf2').value);
+			p.ice = hexToInt(document.getElementById('ice').value);
+
+			p.om = parseInt(document.getElementById('om').value);
+			p.od = parseInt(document.getElementById('od').value);
+			p.ocm = parseInt(document.getElementById('ocm').value);
+			p.ocf = hexToInt(document.getElementById('ocf').value);
+			p.ocf2 = hexToInt(document.getElementById('ocf2').value);
+			p.oce = hexToInt(document.getElementById('oce').value);
+
+			p.sm = parseInt(document.getElementById('sm').value);
+			p.sd = parseInt(document.getElementById('sd').value);
+
+			document.querySelectorAll('.preset-pill')[idx].innerText = p.n;
+			updateDynamicUI();
+		}
+
+		// Helper Functions (나머지 동일)
+		function fillDDaySelect(elId, selectedVal) {
+			const sel = document.getElementById(elId);
+			sel.innerHTML = '';
+			config.ddays.forEach((d, i) => {
+				let opt = document.createElement('option');
+				opt.value = i; opt.text = d.n;
+				sel.add(opt);
+			});
+			sel.value = selectedVal >= config.ddays.length ? 0 : selectedVal;
+		}
+		function addPreset() {
+			config.presets.push({
+				n: "새 프리셋",
+				im: 0, id: 0, icm: 0, icf: 0xFF0000, icf2: 0x00FF00, ice: 0,
+				om: 0, od: 0, ocm: 0, ocf: 0x0000FF, ocf2: 0xFFFF00, oce: 0,
+				sm: 1, sd: 0
+			});
+			config.curIdx = config.presets.length - 1;
+			renderUI();
+		}
+		function delPreset() {
+			if (config.presets.length <= 1) return alert("최소 1개는 있어야 합니다.");
+			if (confirm("삭제?")) { config.presets.splice(config.curIdx, 1); config.curIdx = 0; renderUI(); }
+		}
+		function openDDayEdit(idx) {
+			curDDayIdx = idx; const d = config.ddays[idx];
+			document.getElementById('dName').value = d.n;
+			document.getElementById('dStart').value = d.s;
+			document.getElementById('dTarget').value = d.t;
+			document.getElementById('ddayEditor').style.display = 'block';
+		}
+		function saveDDay() {
+			if (curDDayIdx < 0) return;
+			const d = config.ddays[curDDayIdx];
+			d.n = document.getElementById('dName').value;
+			d.s = document.getElementById('dStart').value;
+			d.t = document.getElementById('dTarget').value;
+			document.getElementById('ddayEditor').style.display = 'none';
+			renderUI();
+		}
+		function addDDay() {
+			config.ddays.push({ n: "새 일정", s: "2025-01-01", t: "2025-12-31" });
+			openDDayEdit(config.ddays.length - 1);
+		}
+		function delDDay() {
+			if (curDDayIdx < 0) return;
+			if (confirm("삭제?")) { config.ddays.splice(curDDayIdx, 1); document.getElementById('ddayEditor').style.display = 'none'; renderUI(); }
+		}
+		function uploadConfig() {
+			const btn = document.getElementById('saveBtn');
+			const loader = document.getElementById('saveLoader');
+			const txt = document.getElementById('saveText');
+			btn.disabled = true; loader.style.display = 'inline-block'; txt.innerText = '저장 중...';
+
+			config.bri = parseInt(document.getElementById('bri').value);
+			config.nEn = document.getElementById('nEn').checked;
+			config.nS = parseInt(document.getElementById('nS').value);
+			config.nE = parseInt(document.getElementById('nE').value);
+			config.nB = parseInt(document.getElementById('nB').value);
+
+			fetch('/set-config', {
+				method: 'POST', headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(config)
+			}).then(r => r.json()).then(d => {
+				txt.innerText = '저장 완료!'; loader.style.display = 'none';
+				setTimeout(() => { btn.disabled = false; txt.innerText = '설정 저장하기'; }, 1000);
+			}).catch(e => {
+				alert('실패'); btn.disabled = false; txt.innerText = '설정 저장하기'; loader.style.display = 'none';
+			});
+		}
+		function intToHex(num) {
+			let hex = num.toString(16);
+			while (hex.length < 6) hex = "0" + hex;
+			return "#" + hex;
+		}
+		function hexToInt(hex) { return parseInt(hex.replace('#', ''), 16); }
+	</script>
+</body>
+
+</html>

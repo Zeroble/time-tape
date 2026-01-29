@@ -1,0 +1,71 @@
+# Time Tape Project - Gemini Context
+
+## 1. Project Overview
+**Time Tape** is a smart connected display powered by an **ESP32-C3 Supermini**. It visualizes time, date, and "D-Day" progress using addressable LED rings and a 7-segment display.
+- **Framework:** Arduino via PlatformIO
+- **MCU:** ESP32-C3 (RISC-V)
+- **Connectivity:** WiFi + Web Interface for configuration
+
+## 2. Hardware Configuration
+### Pin Definitions (from `DisplayManager.h`)
+- **NeoPixel (WS2812B):** GPIO 4
+- **7-Segment Shift Register:**
+  - SCLK: GPIO 8
+  - LOAD (Latch): GPIO 9
+  - SDI (Data): GPIO 7
+
+### Display Components
+- **LED Rings (NeoPixel):** Total 48 LEDs
+  - **Dummy:** 0-7 (8 LEDs, unused/level shifting)
+  - **Inner Ring:** 8-23 (16 LEDs)
+  - **Outer Ring:** 24-47 (24 LEDs)
+- **7-Segment:** 3-digit display driven by 74HC595 shift registers.
+
+## 3. Software Architecture
+
+### Entry Point (`src/main.cpp`)
+- `setup()`: Initializes Config, Display, Network, and Time.
+- `loop()`: Updates display every 100ms (`updateDisplay`).
+
+### Core Modules
+- **`ConfigManager` (`src/ConfigManager.cpp`):**
+  - Manages persistent settings via `LittleFS` (`/config.json`).
+  - Uses `ArduinoJson` for parsing/serialization.
+  - Structure: `AppConfig` contains `presets` (visual modes) and `ddays` (target dates).
+- **`DisplayManager` (`src/DisplayManager.cpp`):**
+  - Handles visual rendering.
+  - `updateDisplay()`: Main render loop. Calculates progress and pushes to LEDs/7-Seg.
+  - `drawSmoothRing()`: Renders progress rings with support for solid, rainbow, and gradient modes.
+  - `show7Seg()`: Bit-banging for shift registers.
+- **`NetworkManager` (`src/NetworkManager.cpp`):**
+  - Sets up WiFi via `WiFiManager`.
+  - Hosts Async Web Server (`ESPAsyncWebServer`) on port 80.
+  - API:
+    - `GET /get-config`: Returns `config.json`.
+    - `POST /set-config`: Updates `config.json` and reloads config.
+- **`TimeLogic` (`src/TimeLogic.cpp`):**
+  - Handles NTP synchronization and time calculations.
+  - `calculateProgress()`: Determines percentage for rings.
+
+## 4. Configuration Structure (`AppConfig`)
+Stored in `config.json`. Key fields:
+- `presets`: List of display modes (Inner/Outer ring modes, Colors, 7-Seg mode).
+- `ddays`: List of target dates (Name, Start Date, Target Date).
+- `nightMode`: Dimming schedule (Start/End hour).
+
+## 5. Development Notes
+- **Filesystem:** `LittleFS` is used. Upload data via `pio run --target uploadfs`.
+- **Dependencies:**
+  - `Adafruit NeoPixel`
+  - `WiFiManager`
+  - `ESPAsyncWebServer`
+  - `ArduinoJson`
+  - `NTPClient`
+
+## 6. Key Logic Details
+- **Ring Rendering:** The `drawSmoothRing` function supports sub-pixel rendering (anti-aliasing) by blending colors at the progress edge.
+- **Color Modes:**
+  - `0`: Solid Color
+  - `1`: Rainbow
+  - `2`: Time Gradient (changes over time)
+  - `3`: Space Gradient (changes over position)
