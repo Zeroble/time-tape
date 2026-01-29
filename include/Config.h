@@ -4,6 +4,17 @@
 #include <Arduino.h>
 #include <vector>
 
+// --- 하드웨어 핀 및 LED 설정 ---
+#define PIN_NEOPIXEL 4
+#define SCLK_PIN 8
+#define LOAD_PIN 9
+#define SDI_PIN 7
+
+#define NUM_LEDS_DUMMY 0
+#define NUM_LEDS_INNER 16
+#define NUM_LEDS_OUTER 24
+#define NUM_LEDS_TOTAL (NUM_LEDS_DUMMY + NUM_LEDS_INNER + NUM_LEDS_OUTER)
+
 // 디데이 구조체
 struct DDay
 {

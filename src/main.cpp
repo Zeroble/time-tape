@@ -1,10 +1,10 @@
 #include <Arduino.h>
 #include "Config.h"
-#include "DisplayManager.h"
+#include "managers/DisplayManager.h"
 #include "NetworkManager.h"
 #include "TimeLogic.h"
 
-// AppConfig globalConfig;
+DisplayManager display;
 
 void setup()
 {
@@ -15,7 +15,7 @@ void setup()
   loadConfig();
 
   // 2. 하드웨어 초기화
-  setupDisplay();
+  display.begin();
 
   // 3. 네트워크 연결 (WiFi -> mDNS -> WebServer)
   setupNetwork();
@@ -28,10 +28,10 @@ void loop()
 {
   static unsigned long lastUpdate = 0;
 
-  // 0.1초마다 디스플레이 갱신 (부드러운 효과를 위해 빠르게)
+  // 0.1초마다 디스플레이 갱신
   if (millis() - lastUpdate > 100)
   {
     lastUpdate = millis();
-    updateDisplay(appConfig);
+    display.update(appConfig);
   }
 }
