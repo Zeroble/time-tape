@@ -4,7 +4,7 @@
 #include "NetworkManager.h"
 #include "TimeLogic.h"
 
-AppConfig globalConfig;
+// AppConfig globalConfig;
 
 void setup()
 {
@@ -32,6 +32,6 @@ void loop()
   if (millis() - lastUpdate > 100)
   {
     lastUpdate = millis();
-    updateDisplay(globalConfig);
+    updateDisplay(appConfig);
   }
 }
