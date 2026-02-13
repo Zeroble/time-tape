@@ -52,7 +52,7 @@
 				<div class="section">
 					<div class="sec-title">안쪽 링 (Inner Ring)</div>
 					<label>표시 정보</label>
-					<select id="im" onchange="updatePresetData()">
+					<select id="im" onchange="updatePresetData('im')">
 						<option value="0">올해 진행률</option>
 						<option value="5">이번 분기 진행률</option>
 						<option value="1">이번 달 진행률</option>
@@ -84,20 +84,28 @@
 								곳</span></div>
 					</div>
                     
-                    <div id="im_sv_box" style="display:none; margin-top:10px;">
+					<div id="im_sv_box" style="display:none; margin-top:10px;">
                         <label id="im_sv_label">설정값</label>
-                        <input type="number" id="im_sv" onchange="updatePresetData('im')">
+                        <input type="number" id="im_sv" onchange="updatePresetData()">
                         <div id="im_sv2_container" style="display:none; margin-top:5px;">
                             <label>휴식 시간 (분)</label>
-                            <input type="number" id="im_sv2" onchange="updatePresetData('im')">
+                            <input type="number" id="im_sv2" onchange="updatePresetData()">
                         </div>
+						<div id="im_sec_container" style="display:none; margin-top:8px;" class="inline-check-row">
+							<div class="unit-switch" role="group" aria-label="안쪽 링 시간 단위">
+								<input type="radio" name="im_unit" id="im_unit_min" value="min" onchange="updatePresetData()" checked>
+								<label for="im_unit_min">분</label>
+								<input type="radio" name="im_unit" id="im_unit_sec" value="sec" onchange="updatePresetData()">
+								<label for="im_unit_sec">초</label>
+							</div>
+						</div>
                     </div>
 				</div>
 
 				<div class="section">
 					<div class="sec-title">바깥쪽 링 (Outer Ring)</div>
 					<label>표시 정보</label>
-					<select id="om" onchange="updatePresetData()">
+					<select id="om" onchange="updatePresetData('om')">
 						<option value="0">올해 진행률</option>
 						<option value="5">이번 분기 진행률</option>
 						<option value="1">이번 달 진행률</option>
@@ -129,13 +137,21 @@
 								곳</span></div>
 					</div>
                     
-                    <div id="om_sv_box" style="display:none; margin-top:10px;">
+					<div id="om_sv_box" style="display:none; margin-top:10px;">
                         <label id="om_sv_label">설정값</label>
-                        <input type="number" id="om_sv" onchange="updatePresetData('om')">
+                        <input type="number" id="om_sv" onchange="updatePresetData()">
                         <div id="om_sv2_container" style="display:none; margin-top:5px;">
                             <label>휴식 시간 (분)</label>
-                            <input type="number" id="om_sv2" onchange="updatePresetData('om')">
+                            <input type="number" id="om_sv2" onchange="updatePresetData()">
                         </div>
+						<div id="om_sec_container" style="display:none; margin-top:8px;" class="inline-check-row">
+							<div class="unit-switch" role="group" aria-label="바깥쪽 링 시간 단위">
+								<input type="radio" name="om_unit" id="om_unit_min" value="min" onchange="updatePresetData()" checked>
+								<label for="om_unit_min">분</label>
+								<input type="radio" name="om_unit" id="om_unit_sec" value="sec" onchange="updatePresetData()">
+								<label for="om_unit_sec">초</label>
+							</div>
+						</div>
                     </div>
 				</div>
 
@@ -212,6 +228,23 @@
 				<div id="logContainer"></div>
 				<button class="btn-small" onclick="clearLog()"
 					style="width:auto; margin-top:10px; background:#444; padding: 5px 10px;">지우기</button>
+			</div>
+			<div class="section">
+				<div class="sec-title">Firmware Update (.bin)</div>
+				<div id="fwInfoText" class="fw-info">Loading device info...</div>
+				<label class="fw-file-label" for="fsFile">Filesystem image (LittleFS, optional)</label>
+				<input type="file" id="fsFile" accept=".bin">
+				<label class="fw-file-label" for="fwFile">Firmware image (required)</label>
+				<input type="file" id="fwFile" accept=".bin">
+				<button id="fwUploadBtn" class="btn-small btn-fw" onclick="uploadFirmwareBin()">Upload & Update</button>
+				<div class="fw-progress-wrap" aria-live="polite">
+					<div class="fw-progress-track">
+						<div id="fwProgressFill" class="fw-progress-fill"></div>
+					</div>
+					<div id="fwProgressText" class="fw-progress-text">0%</div>
+				</div>
+				<div id="fwUploadStatus" class="fw-status">Select firmware .bin (and optional filesystem .bin), then start update.</div>
+				<div class="fw-note">If filesystem is selected, it uploads first, then firmware. Do not power off during update.</div>
 			</div>
 		</div>
 

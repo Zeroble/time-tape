@@ -2,6 +2,93 @@
 
 InteractiveManager interactiveManager;
 
+static const ModePayload *findPayloadForMode(const Preset &p, int mode)
+{
+    if (p.inner.mode == mode)
+    {
+        return &p.inner.payload;
+    }
+    if (p.outer.mode == mode)
+    {
+        return &p.outer.payload;
+    }
+    return nullptr;
+}
+
+static long getCounterTargetFromPayload(const ModePayload *payload)
+{
+    if (payload && payload->kind == PAYLOAD_COUNTER && payload->value.counterTarget > 0)
+    {
+        return payload->value.counterTarget;
+    }
+    return 100;
+}
+
+static long getTimerSecondsFromPayload(const ModePayload *payload)
+{
+    if (payload && payload->kind == PAYLOAD_TIMER && payload->value.timer.totalSeconds > 0)
+    {
+        return payload->value.timer.totalSeconds;
+    }
+    return 60;
+}
+
+static bool getTimerDisplaySecondsFromPayload(const ModePayload *payload)
+{
+    if (payload && payload->kind == PAYLOAD_TIMER)
+    {
+        return payload->value.timer.displaySeconds;
+    }
+    return false;
+}
+
+static void getPomodoroConfigFromPayload(const ModePayload *payload, long &workMin, long &restMin, bool &displaySeconds)
+{
+    workMin = 25;
+    restMin = 5;
+    displaySeconds = false;
+
+    if (!payload || payload->kind != PAYLOAD_POMODORO)
+    {
+        return;
+    }
+
+    if (payload->value.pomodoro.workMinutes > 0)
+    {
+        workMin = payload->value.pomodoro.workMinutes;
+    }
+    if (payload->value.pomodoro.restMinutes > 0)
+    {
+        restMin = payload->value.pomodoro.restMinutes;
+    }
+    displaySeconds = payload->value.pomodoro.displaySeconds;
+}
+
+static long getCounterTarget(const Preset &p)
+{
+    return getCounterTargetFromPayload(findPayloadForMode(p, MODE_COUNTER));
+}
+
+static long getTimerSeconds(const Preset &p)
+{
+    return getTimerSecondsFromPayload(findPayloadForMode(p, MODE_TIMER));
+}
+
+static void getPomodoroMinutes(const Preset &p, long &workMin, long &restMin)
+{
+    bool ignoredDisplaySeconds = false;
+    getPomodoroConfigFromPayload(findPayloadForMode(p, MODE_POMODORO), workMin, restMin, ignoredDisplaySeconds);
+}
+
+static bool getPomodoroDisplaySeconds(const Preset &p)
+{
+    long ignoredWorkMin = 25;
+    long ignoredRestMin = 5;
+    bool displaySeconds = false;
+    getPomodoroConfigFromPayload(findPayloadForMode(p, MODE_POMODORO), ignoredWorkMin, ignoredRestMin, displaySeconds);
+    return displaySeconds;
+}
+
 InteractiveManager::InteractiveManager() {}
 
 void InteractiveManager::begin()
@@ -26,9 +113,11 @@ void InteractiveManager::update()
     const Preset &p = appConfig.presets[appConfig.currentPresetIndex];
 
     // Pomodoro logic
-    // Work = specialValue (min), Rest = specialValue2 (min)
-    unsigned long workDur = (p.specialValue > 0 ? p.specialValue : 25) * 60 * 1000;
-    unsigned long restDur = (p.specialValue2 > 0 ? p.specialValue2 : 5) * 60 * 1000;
+    long workMin = 25;
+    long restMin = 5;
+    getPomodoroMinutes(p, workMin, restMin);
+    unsigned long workDur = workMin * 60UL * 1000UL;
+    unsigned long restDur = restMin * 60UL * 1000UL;
 
     if (_pomoState == POMO_WORK && _pomoRunning)
     {
@@ -145,29 +234,37 @@ void InteractiveManager::handleButton2(int mode)
     }
 }
 
-float InteractiveManager::getProgress(int mode, int ringSize)
+void InteractiveManager::resetCounter()
 {
-    if (appConfig.presets.empty())
-        return 0.0f;
-    const Preset &p = appConfig.presets[appConfig.currentPresetIndex];
+    _counterValue = 0;
+    webLog("[Counter] Reset");
+}
 
-    if (mode == MODE_COUNTER)
+float InteractiveManager::getProgress(const RingConfig &ring)
+{
+    if (ring.mode == MODE_COUNTER)
     {
-        long target = p.specialValue > 0 ? p.specialValue : 100;
+        long target = getCounterTargetFromPayload(&ring.payload);
+        if (target <= 0)
+            return 0.0f;
         return (float)_counterValue / (float)target;
     }
-    else if (mode == MODE_TIMER)
+    else if (ring.mode == MODE_TIMER)
     {
-        long targetBox = (p.specialValue > 0 ? p.specialValue : 60) * 1000;
+        long targetBox = getTimerSecondsFromPayload(&ring.payload) * 1000L;
         unsigned long elapsed = getElapsed(_timerStartTime, _accumulatedTime, _timerRunning);
         if (elapsed >= (unsigned long)targetBox)
             return 1.0f;
         return (float)elapsed / (float)targetBox;
     }
-    else if (mode == MODE_POMODORO)
+    else if (ring.mode == MODE_POMODORO)
     {
-        unsigned long workDur = (p.specialValue > 0 ? p.specialValue : 25) * 60 * 1000;
-        unsigned long restDur = (p.specialValue2 > 0 ? p.specialValue2 : 5) * 60 * 1000;
+        long workMin = 25;
+        long restMin = 5;
+        bool ignoredDisplaySeconds = false;
+        getPomodoroConfigFromPayload(&ring.payload, workMin, restMin, ignoredDisplaySeconds);
+        unsigned long workDur = workMin * 60UL * 1000UL;
+        unsigned long restDur = restMin * 60UL * 1000UL;
 
         unsigned long duration = (_pomoState == POMO_WORK) ? workDur : restDur;
         if (_pomoState == POMO_WAIT_REST || _pomoState == POMO_WAIT_WORK)
@@ -193,17 +290,26 @@ int InteractiveManager::getDisplayNumber(int mode)
     }
     else if (mode == MODE_TIMER)
     {
-        long target = p.specialValue > 0 ? p.specialValue : 60;
+        long target = getTimerSeconds(p);
+        bool displaySeconds = getTimerDisplaySecondsFromPayload(findPayloadForMode(p, MODE_TIMER));
         unsigned long elapsed = getElapsed(_timerStartTime, _accumulatedTime, _timerRunning);
         long remainingSeconds = target - (elapsed / 1000);
         if (remainingSeconds < 0)
             remainingSeconds = 0;
+        if (displaySeconds)
+        {
+            return (int)remainingSeconds;
+        }
         return (remainingSeconds + 59) / 60; // Minutes ceil
     }
     else if (mode == MODE_POMODORO)
     {
-        unsigned long workDur = (p.specialValue > 0 ? p.specialValue : 25) * 60 * 1000;
-        unsigned long restDur = (p.specialValue2 > 0 ? p.specialValue2 : 5) * 60 * 1000;
+        long workMin = 25;
+        long restMin = 5;
+        getPomodoroMinutes(p, workMin, restMin);
+        bool displaySeconds = getPomodoroDisplaySeconds(p);
+        unsigned long workDur = workMin * 60UL * 1000UL;
+        unsigned long restDur = restMin * 60UL * 1000UL;
 
         unsigned long duration = (_pomoState == POMO_WORK) ? workDur : restDur;
         if (_pomoState == POMO_WAIT_REST || _pomoState == POMO_WAIT_WORK)
@@ -213,6 +319,10 @@ int InteractiveManager::getDisplayNumber(int mode)
         long remainingMS = duration - elapsed;
         if (remainingMS < 0)
             remainingMS = 0;
+        if (displaySeconds)
+        {
+            return (int)((remainingMS + 999) / 1000); // Seconds ceil
+        }
         return (int)((remainingMS + 59999) / 60000); // Minutes ceil
     }
     return 0;

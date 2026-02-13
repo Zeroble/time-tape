@@ -27,6 +27,16 @@
 #define MODE_TIMER 11
 #define MODE_POMODORO 12
 
+// --- 모드 payload kind ---
+enum PayloadKind : uint8_t
+{
+	PAYLOAD_NONE = 0,
+	PAYLOAD_DDAY = 1,
+	PAYLOAD_COUNTER = 2,
+	PAYLOAD_TIMER = 3,
+	PAYLOAD_POMODORO = 4
+};
+
 // 디데이 구조체
 struct DDay
 {
@@ -35,34 +45,94 @@ struct DDay
 	String targetDate;
 };
 
-// 프리셋 구조체 (색상 모드 추가됨)
+struct TimerPayload
+{
+	long totalSeconds;
+	bool displaySeconds;
+};
+
+struct PomodoroPayload
+{
+	long workMinutes;
+	long restMinutes;
+	bool displaySeconds;
+};
+
+union ModePayloadValue
+{
+	int ddayIndex;
+	long counterTarget;
+	TimerPayload timer;
+	PomodoroPayload pomodoro;
+	ModePayloadValue() : ddayIndex(0) {}
+};
+
+struct ModePayload
+{
+	PayloadKind kind = PAYLOAD_NONE;
+	ModePayloadValue value;
+};
+
+struct RingConfig
+{
+	int mode = 0;
+	int colorMode = 0; // 0:단색, 1:무지개, 2:시간그라, 3:공간그라
+	uint32_t colorFill = 0;
+	uint32_t colorFill2 = 0;
+	uint32_t colorEmpty = 0;
+	ModePayload payload;
+};
+
+struct SegmentConfig
+{
+	int mode = 1;
+	ModePayload payload;
+};
+
 struct Preset
 {
-	// Inner Ring
-	int innerMode;
-	int id_dd;
-	int innerColorMode;
-	// 0:단색, 1:무지개, 2:시간그라, 3:공간그라
-	uint32_t innerColorFill;  // 시작 색 (또는 단색)
-	uint32_t innerColorFill2; // 끝 색 (그라데이션용)
-	uint32_t innerColorEmpty; // 빈 곳 색
-
-	// Outer Ring
-	int outerMode;
-	int outerDDayIndex;
-	int outerColorMode; // [신규]
-	uint32_t outerColorFill;
-	uint32_t outerColorFill2; // [신규]
-	uint32_t outerColorEmpty;
-
-	// 7-Segment
-	int segMode;
-	int segDDayIndex;
-
-    // 특수 기능 설정 (카운터 목표값, 타이머 시간(초) 등)
-    long specialValue; 
-    long specialValue2; // 휴식 시간 등 추가 값
+	RingConfig inner;
+	RingConfig outer;
+	SegmentConfig segment;
 };
+
+inline void payloadSetNone(ModePayload &payload)
+{
+	payload.kind = PAYLOAD_NONE;
+	payload.value.ddayIndex = 0;
+}
+
+inline void payloadSetDDay(ModePayload &payload, int ddayIndex)
+{
+	payload.kind = PAYLOAD_DDAY;
+	payload.value.ddayIndex = ddayIndex;
+}
+
+inline void payloadSetCounter(ModePayload &payload, long counterTarget)
+{
+	payload.kind = PAYLOAD_COUNTER;
+	payload.value.counterTarget = counterTarget;
+}
+
+inline void payloadSetTimer(ModePayload &payload, long totalSeconds, bool displaySeconds = false)
+{
+	payload.kind = PAYLOAD_TIMER;
+	payload.value.timer.totalSeconds = totalSeconds;
+	payload.value.timer.displaySeconds = displaySeconds;
+}
+
+inline void payloadSetPomodoro(ModePayload &payload, long workMinutes, long restMinutes, bool displaySeconds = false)
+{
+	payload.kind = PAYLOAD_POMODORO;
+	payload.value.pomodoro.workMinutes = workMinutes;
+	payload.value.pomodoro.restMinutes = restMinutes;
+	payload.value.pomodoro.displaySeconds = displaySeconds;
+}
+
+inline bool isInteractiveMode(int mode)
+{
+	return mode >= MODE_COUNTER;
+}
 
 // 전체 설정 구조체
 struct AppConfig

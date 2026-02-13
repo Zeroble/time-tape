@@ -294,6 +294,56 @@ input[type=range] {
     background: transparent;
 }
 
+.inline-check-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+input[type="checkbox"].inline-check {
+    width: auto;
+    margin: 0;
+    padding: 0;
+}
+
+.unit-switch {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    background: #1f1f1f;
+    border: 1px solid #3a3a3a;
+    border-radius: 10px;
+    padding: 6px;
+    box-sizing: border-box;
+}
+
+.unit-switch input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.unit-switch label {
+    margin: 0;
+    padding: 10px 0;
+    text-align: center;
+    background: #2b2b2b;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #9a9a9a;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s, color .2s, border-color .2s;
+}
+
+.unit-switch input:checked+label {
+    background: #00c853;
+    color: #ffffff;
+    border-color: #00c853;
+}
+
 /* 로그창 스타일 */
 #logContainer {
     background: #000;
@@ -313,4 +363,81 @@ input[type=range] {
     margin-bottom: 2px;
     border-bottom: 1px solid #111;
     padding-bottom: 2px;
+}
+
+.btn-fw {
+    margin-top: 8px;
+    background: #1f6feb;
+    color: #fff;
+}
+
+.btn-fw:disabled {
+    background: #274f8a;
+    color: #97a8c2;
+    cursor: not-allowed;
+}
+
+.fw-info {
+    font-size: 12px;
+    color: #9fb0bf;
+    margin-bottom: 10px;
+}
+
+.fw-file-label {
+    margin-top: 8px;
+    margin-bottom: 4px;
+    font-size: 12px;
+    color: #9fb0bf;
+}
+
+.fw-progress-wrap {
+    margin-top: 10px;
+}
+
+.fw-progress-track {
+    width: 100%;
+    height: 12px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: #1d1d1d;
+    border: 1px solid #3a3a3a;
+}
+
+.fw-progress-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #00c853 0%, #1de9b6 100%);
+    transition: width .12s linear;
+}
+
+.fw-progress-text {
+    text-align: right;
+    font-size: 12px;
+    margin-top: 6px;
+    color: #aeb6bf;
+}
+
+.fw-status {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #c8ced6;
+}
+
+.fw-status.running {
+    color: #8ab4f8;
+}
+
+.fw-status.ok {
+    color: #00e676;
+}
+
+.fw-status.error {
+    color: #ff6b6b;
+}
+
+.fw-note {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #8a8a8a;
+    line-height: 1.4;
 }

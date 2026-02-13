@@ -84,6 +84,7 @@ void loop()
 {
   // OTA 패킷 처리(가장 중요)
   ArduinoOTA.handle();
+  networkLoop();
 
   // 버튼 상태 업데이트
   buttons.update();
@@ -100,35 +101,45 @@ void loop()
   int activeInteractiveMode = MODE_NONE;
   if (!appConfig.presets.empty()) {
       const Preset& p = appConfig.presets[appConfig.currentPresetIndex];
-      if (p.innerMode >= 10) activeInteractiveMode = p.innerMode;
-      else if (p.outerMode >= 10) activeInteractiveMode = p.outerMode;
+      if (isInteractiveMode(p.inner.mode)) activeInteractiveMode = p.inner.mode;
+      else if (isInteractiveMode(p.outer.mode)) activeInteractiveMode = p.outer.mode;
   }
 
-  // 버튼 1 처리 (특수 모드 Reset/Decrease)
-  if (buttons.wasPressed(BTN_1)) {
-      if (activeInteractiveMode != MODE_NONE) {
-          interactiveManager.handleButton1(activeInteractiveMode);
-          // 카운터일 경우 잠시 값 표시 트리거
-          if (activeInteractiveMode == MODE_COUNTER) {
-              lastInteractionTime = millis();
-              interactionMode = MODE_COUNTER;
+  bool btn1Pressed = buttons.wasPressed(BTN_1);
+  bool btn2Pressed = buttons.wasPressed(BTN_2);
+
+  // 카운터 모드에서 버튼 1+2 동시 입력 시 카운터 초기화
+  if (activeInteractiveMode == MODE_COUNTER && btn1Pressed && btn2Pressed) {
+      interactiveManager.resetCounter();
+      lastInteractionTime = millis();
+      interactionMode = MODE_COUNTER;
+  } else {
+      // 버튼 1 처리 (특수 모드 Reset/Decrease)
+      if (btn1Pressed) {
+          if (activeInteractiveMode != MODE_NONE) {
+              interactiveManager.handleButton1(activeInteractiveMode);
+              // 카운터일 경우 잠시 값 표시 트리거
+              if (activeInteractiveMode == MODE_COUNTER) {
+                  lastInteractionTime = millis();
+                  interactionMode = MODE_COUNTER;
+              }
+          } else {
+              webLog("Btn 1 pressed (No Action)");
           }
-      } else {
-          webLog("Btn 1 pressed (No Action)");
       }
-  }
 
-  // 버튼 2 처리 (특수 모드 Start/Increase)
-  if (buttons.wasPressed(BTN_2)) {
-      if (activeInteractiveMode != MODE_NONE) {
-          interactiveManager.handleButton2(activeInteractiveMode);
-          // 카운터일 경우 잠시 값 표시 트리거
-          if (activeInteractiveMode == MODE_COUNTER) {
-              lastInteractionTime = millis();
-              interactionMode = MODE_COUNTER;
+      // 버튼 2 처리 (특수 모드 Start/Increase)
+      if (btn2Pressed) {
+          if (activeInteractiveMode != MODE_NONE) {
+              interactiveManager.handleButton2(activeInteractiveMode);
+              // 카운터일 경우 잠시 값 표시 트리거
+              if (activeInteractiveMode == MODE_COUNTER) {
+                  lastInteractionTime = millis();
+                  interactionMode = MODE_COUNTER;
+              }
+          } else {
+              webLog("Btn 2 pressed (No Action)");
           }
-      } else {
-          webLog("Btn 2 pressed (No Action)");
       }
   }
 
