@@ -9,10 +9,18 @@ public:
     DisplayManager();
     void begin();
     void update(const AppConfig& config);
+    void startBootAnimation(); // 비동기 시작
+    void stopBootAnimation();  // 종료
+    void displayIP(uint32_t ipAddress); // IP 표시
+    void displayPreset(int presetIndex);
+    void displayTemporaryValue(int value);
+    bool isBooting() const { return _isBooting; }
 
 private:
     LedDriver _leds;
     SegmentDriver _seg;
+    bool _isBooting = false;
+    TaskHandle_t _bootTaskHandle = NULL;
     
     // 효과 전략들
     SolidEffect _solidEffect;

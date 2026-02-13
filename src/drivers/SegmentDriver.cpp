@@ -9,6 +9,14 @@ void SegmentDriver::begin() {
     pinMode(_sdiPin, OUTPUT);
 }
 
+void SegmentDriver::drawRaw(byte h, byte t, byte o) {
+    digitalWrite(_loadPin, LOW);
+    shiftOut(_sdiPin, _sclkPin, MSBFIRST, o);
+    shiftOut(_sdiPin, _sclkPin, MSBFIRST, t);
+    shiftOut(_sdiPin, _sclkPin, MSBFIRST, h);
+    digitalWrite(_loadPin, HIGH);
+}
+
 void SegmentDriver::drawNumber(int num, int dpPos, bool isOff) {
     if (isOff) {
         digitalWrite(_loadPin, LOW);

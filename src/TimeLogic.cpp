@@ -1,6 +1,7 @@
 #include "TimeLogic.h"
 #include <NTPClient.h>
 #include <WiFiUdp.h>
+#include "WebLogger.h"
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org");
@@ -9,6 +10,17 @@ void setupTime() {
     timeClient.begin();
     timeClient.setTimeOffset(3600 * 9); 
     configTime(3600 * 9, 0, "pool.ntp.org", "time.nist.gov");
+
+    webLog("Waiting for NTP time sync: ");
+    time_t now = time(nullptr);
+    int retry = 0;
+    while (now < 8 * 3600 * 2 && retry < 100) { // 약 10초간 대기
+        delay(100);
+        // webLog("."); // 점을 계속 찍으면 웹소켓 부하가 클 수 있으니 생략하거나 묶어서 출력
+        now = time(nullptr);
+        retry++;
+    }
+    webLog("Time synchronized!");
 }
 
 bool getLocalTimeInfo(struct tm * info) {

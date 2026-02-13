@@ -1,19 +1,18 @@
 #include "Config.h"
 #include <ArduinoJson.h>
-#include <LittleFS.h>
+#include <Preferences.h>
 
 AppConfig appConfig;
+Preferences preferences;
 
 void initDefaultConfig()
 {
 	appConfig.presets.clear();
 	appConfig.ddays.clear();
 
-	// 기본 프리셋 생성 (무지개/그라데이션 예시 포함)
 	Preset p1;
-	p1.name = "기본 모드";
 	p1.innerMode = 0;
-	p1.innerDDayIndex = 0;
+	p1.id_dd = 0;
 	p1.innerColorMode = 0;
 	p1.innerColorFill = 0xFF0000;
 	p1.innerColorFill2 = 0x00FF00;
@@ -26,91 +25,121 @@ void initDefaultConfig()
 	p1.outerColorEmpty = 0;
 	p1.segMode = 1;
 	p1.segDDayIndex = 0;
+    p1.specialValue = 0;
+    p1.specialValue2 = 0;
 
 	appConfig.presets.push_back(p1);
+	appConfig.ddays.push_back({"새해", "2025-01-01", "2026-01-01"});
+}
 
-	DDay d1 = {"새해", "2025-01-01", "2026-01-01"};
-	appConfig.ddays.push_back(d1);
+void saveConfigToFile()
+{
+    preferences.begin("time-tape", false);
+    
+    JsonDocument doc;
+    doc["curIdx"] = appConfig.currentPresetIndex;
+    doc["bri"] = appConfig.brightness;
+    doc["nEn"] = appConfig.nightModeEnabled;
+    doc["nS"] = appConfig.nightStartHour;
+    doc["nE"] = appConfig.nightEndHour;
+    doc["nB"] = appConfig.nightBrightness;
+
+    JsonArray arrP = doc["presets"].to<JsonArray>();
+    for (const auto &p : appConfig.presets)
+    {
+        JsonObject obj = arrP.add<JsonObject>();
+        obj["im"] = p.innerMode;
+        obj["id_dd"] = p.id_dd;
+        obj["icm"] = p.innerColorMode;
+        obj["icf"] = p.innerColorFill;
+        obj["icf2"] = p.innerColorFill2;
+        obj["ice"] = p.innerColorEmpty;
+        obj["om"] = p.outerMode;
+        obj["od"] = p.outerDDayIndex;
+        obj["ocm"] = p.outerColorMode;
+        obj["ocf"] = p.outerColorFill;
+        obj["ocf2"] = p.outerColorFill2;
+        obj["oce"] = p.outerColorEmpty;
+        obj["sm"] = p.segMode;
+        obj["sd"] = p.segDDayIndex;
+        obj["sv"] = p.specialValue;
+        obj["sv2"] = p.specialValue2;
+    }
+
+    JsonArray arrD = doc["ddays"].to<JsonArray>();
+    for (const auto &d : appConfig.ddays)
+    {
+        JsonObject obj = arrD.add<JsonObject>();
+        obj["n"] = d.name;
+        obj["s"] = d.startDate;
+        obj["t"] = d.targetDate;
+    }
+
+    String jsonStr;
+    serializeJson(doc, jsonStr);
+    preferences.putString("config", jsonStr);
+    preferences.end();
 }
 
 void loadConfig()
 {
-	if (!LittleFS.begin())
-	{
-		Serial.println("LittleFS Error");
-		return;
-	}
+    preferences.begin("time-tape", true);
+    String jsonStr = preferences.getString("config", "");
+    preferences.end();
 
-	File file = LittleFS.open("/config.json", "r");
-	if (!file)
-	{
-		Serial.println("No config file, using default.");
-		initDefaultConfig();
-		return;
-	}
+    if (jsonStr == "")
+    {
+        initDefaultConfig();
+        return;
+    }
 
-	// JSON 파싱 (용량을 넉넉하게 4KB)
-	DynamicJsonDocument doc(4096);
-	DeserializationError error = deserializeJson(doc, file);
-	file.close();
+    JsonDocument doc;
+    DeserializationError error = deserializeJson(doc, jsonStr);
+    if (error)
+    {
+        initDefaultConfig();
+        return;
+    }
 
-	if (error)
-	{
-		Serial.println("JSON Parse Error, using default.");
-		initDefaultConfig();
-		return;
-	}
+    appConfig.currentPresetIndex = doc["curIdx"] | 0;
+    appConfig.brightness = doc["bri"] | 50;
+    appConfig.nightModeEnabled = doc["nEn"] | false;
+    appConfig.nightStartHour = doc["nS"] | 22;
+    appConfig.nightEndHour = doc["nE"] | 7;
+    appConfig.nightBrightness = doc["nB"] | 10;
 
-	// 1. 기본 설정 파싱
-	appConfig.currentPresetIndex = doc["curIdx"] | 0;
-	appConfig.brightness = doc["bri"] | 50;
-	appConfig.nightModeEnabled = doc["nEn"] | false;
-	appConfig.nightStartHour = doc["nS"] | 22;
-	appConfig.nightEndHour = doc["nE"] | 7;
-	appConfig.nightBrightness = doc["nB"] | 10;
+    appConfig.presets.clear();
+    JsonArray presets = doc["presets"];
+    for (JsonObject pObj : presets)
+    {
+        Preset p;
+        p.innerMode = pObj["im"] | 0;
+        p.id_dd = pObj["id_dd"] | 0;
+        p.innerColorMode = pObj["icm"] | 0;
+        p.innerColorFill = pObj["icf"] | 0xFF0000;
+        p.innerColorFill2 = pObj["icf2"] | 0x00FF00;
+        p.innerColorEmpty = pObj["ice"] | 0;
+        p.outerMode = pObj["om"] | 0;
+        p.outerDDayIndex = pObj["od"] | 0;
+        p.outerColorMode = pObj["ocm"] | 0;
+        p.outerColorFill = pObj["ocf"] | 0x0000FF;
+        p.outerColorFill2 = pObj["ocf2"] | 0xFFFF00;
+        p.outerColorEmpty = pObj["oce"] | 0;
+        p.segMode = pObj["sm"] | 1;
+        p.segDDayIndex = pObj["sd"] | 0;
+        p.specialValue = pObj["sv"] | 0;
+        p.specialValue2 = pObj["sv2"] | 0;
+        appConfig.presets.push_back(p);
+    }
 
-	// 2. 프리셋 파싱 (여기에 새 색상 모드 로직이 들어감)
-	appConfig.presets.clear();
-	JsonArray presets = doc["presets"];
-	for (JsonObject pObj : presets)
-	{
-		Preset p;
-		p.name = pObj["n"].as<String>();
-
-		// Inner
-		p.innerMode = pObj["im"];
-		p.innerDDayIndex = pObj["id"];
-		p.innerColorMode = pObj["icm"] | 0; // <--- [중요] 모드 읽기
-		p.innerColorFill = pObj["icf"];
-		p.innerColorFill2 = pObj["icf2"] | 0x00FF00; // <--- [중요] 2번 색상 읽기
-		p.innerColorEmpty = pObj["ice"];
-
-		// Outer
-		p.outerMode = pObj["om"];
-		p.outerDDayIndex = pObj["od"];
-		p.outerColorMode = pObj["ocm"] | 0; // <--- [중요]
-		p.outerColorFill = pObj["ocf"];
-		p.outerColorFill2 = pObj["ocf2"] | 0xFFFF00; // <--- [중요]
-		p.outerColorEmpty = pObj["oce"];
-
-		// Seg
-		p.segMode = pObj["sm"];
-		p.segDDayIndex = pObj["sd"];
-
-		appConfig.presets.push_back(p);
-	}
-
-	// 3. 디데이 파싱
-	appConfig.ddays.clear();
-	JsonArray ddays = doc["ddays"];
-	for (JsonObject dObj : ddays)
-	{
-		DDay d;
-		d.name = dObj["n"].as<String>();
-		d.startDate = dObj["s"].as<String>();
-		d.targetDate = dObj["t"].as<String>();
-		appConfig.ddays.push_back(d);
-	}
-
-	Serial.println("Config Loaded Successfully");
+    appConfig.ddays.clear();
+    JsonArray ddays = doc["ddays"];
+    for (JsonObject dObj : ddays)
+    {
+        DDay d;
+        d.name = dObj["n"] | "";
+        d.startDate = dObj["s"] | "";
+        d.targetDate = dObj["t"] | "";
+        appConfig.ddays.push_back(d);
+    }
 }

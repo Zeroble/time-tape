@@ -1,0 +1,316 @@
+body {
+    font-family: 'Apple SD Gothic Neo', sans-serif;
+    background: #121212;
+    color: #eee;
+    margin: 0;
+    padding: 10px;
+    -webkit-user-select: none;
+}
+
+.container {
+    max-width: 500px;
+    margin: 0 auto;
+    background: #1e1e1e;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+}
+
+.tabs {
+    display: flex;
+    background: #252525;
+    border-bottom: 1px solid #333;
+}
+
+.tab {
+    flex: 1;
+    padding: 18px;
+    text-align: center;
+    cursor: pointer;
+    color: #888;
+    font-weight: bold;
+    font-size: 15px;
+    transition: 0.2s;
+}
+
+.tab.active {
+    color: #00e676;
+    border-bottom: 3px solid #00e676;
+    background: #2a2a2a;
+}
+
+.content {
+    padding: 20px;
+    display: none;
+}
+
+.content.active {
+    display: block;
+}
+
+.section {
+    background: #2a2a2a;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    border: 1px solid #333;
+}
+
+.sec-title {
+    font-size: 13px;
+    color: #aaa;
+    font-weight: bold;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #444;
+    padding-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+label {
+    display: block;
+    font-size: 14px;
+    margin: 10px 0 6px;
+    color: #ccc;
+}
+
+select,
+input {
+    width: 100%;
+    padding: 12px;
+    background: #333;
+    color: white;
+    border: 1px solid #444;
+    border-radius: 8px;
+    box-sizing: border-box;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 5px;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-green {
+    background: #00c853;
+    color: white;
+    margin-top: 15px;
+    border-radius: 0 0 16px 16px;
+    width: 100%;
+    padding: 18px;
+}
+
+.btn-green:disabled {
+    background: #1b5e20;
+    color: #888;
+    cursor: not-allowed;
+}
+
+.btn-red {
+    background: #d32f2f;
+    color: white;
+    width: 10;
+    padding: 8px 16px;
+    font-size: 13px;
+    margin-top: 0;
+}
+
+.btn-small {
+    margin-top: 5px;
+}
+
+.loader {
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top: 3px solid #ffffff;
+    width: 18px;
+    height: 18px;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+    display: none;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.preset-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.preset-pill {
+    background: #333;
+    color: #aaa;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    white-space: nowrap;
+    cursor: pointer;
+    border: 1px solid #444;
+    transition: 0.2s;
+}
+
+.preset-pill.active {
+    background: #00c853;
+    color: white;
+    border-color: #00c853;
+    font-weight: bold;
+}
+
+.preset-pill.add-btn {
+    background: transparent;
+    border: 1px dashed #666;
+    color: #666;
+}
+
+/* 색상 관련 UI 수정 */
+.color-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+    background: #222;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.color-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    flex: 1;
+}
+
+.color-box span {
+    font-size: 11px;
+    color: #888;
+    text-align: center;
+}
+
+input[type="color"] {
+    -webkit-appearance: none;
+    border: none;
+    width: 100%;
+    height: 40px;
+    padding: 0;
+    background: none;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.list-item {
+    background: #333;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.switch-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    background: #333;
+    padding: 10px 15px;
+    border-radius: 8px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #555;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: #00c853;
+}
+
+input:checked+.slider:before {
+    transform: translateX(22px);
+}
+
+input[type=range] {
+    width: 100%;
+    margin: 10px 0;
+    background: transparent;
+}
+
+/* 로그창 스타일 */
+#logContainer {
+    background: #000;
+    color: #00ff41;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    padding: 10px;
+    height: 300px;
+    overflow-y: auto;
+    border-radius: 8px;
+    border: 1px solid #333;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.log-line {
+    margin-bottom: 2px;
+    border-bottom: 1px solid #111;
+    padding-bottom: 2px;
+}

@@ -5,15 +5,27 @@
 #include <vector>
 
 // --- 하드웨어 핀 및 LED 설정 ---
-#define PIN_NEOPIXEL 4
+#define PIN_INNER 4
+#define PIN_OUTER 3
+#define SDI_PIN 7
 #define SCLK_PIN 8
 #define LOAD_PIN 9
-#define SDI_PIN 7
 
-#define NUM_LEDS_DUMMY 0
+// --- 버튼 핀 설정 ---
+#define BTN_1 5
+#define BTN_2 6
+#define BTN_3 10
+#define BTN_4 20
+
 #define NUM_LEDS_INNER 16
 #define NUM_LEDS_OUTER 24
-#define NUM_LEDS_TOTAL (NUM_LEDS_DUMMY + NUM_LEDS_INNER + NUM_LEDS_OUTER)
+
+// --- 모드 상수 정의 ---
+#define MODE_NONE 0
+// 기존 1~6은 유지 (코드 내 매직 넘버 사용 중)
+#define MODE_COUNTER 10
+#define MODE_TIMER 11
+#define MODE_POMODORO 12
 
 // 디데이 구조체
 struct DDay
@@ -26,12 +38,11 @@ struct DDay
 // 프리셋 구조체 (색상 모드 추가됨)
 struct Preset
 {
-	String name;
-
 	// Inner Ring
 	int innerMode;
-	int innerDDayIndex;
-	int innerColorMode;		  // 0:단색, 1:무지개, 2:시간그라, 3:공간그라
+	int id_dd;
+	int innerColorMode;
+	// 0:단색, 1:무지개, 2:시간그라, 3:공간그라
 	uint32_t innerColorFill;  // 시작 색 (또는 단색)
 	uint32_t innerColorFill2; // 끝 색 (그라데이션용)
 	uint32_t innerColorEmpty; // 빈 곳 색
@@ -47,6 +58,10 @@ struct Preset
 	// 7-Segment
 	int segMode;
 	int segDDayIndex;
+
+    // 특수 기능 설정 (카운터 목표값, 타이머 시간(초) 등)
+    long specialValue; 
+    long specialValue2; // 휴식 시간 등 추가 값
 };
 
 // 전체 설정 구조체
